@@ -300,6 +300,7 @@ void usage(void)
             "  boot <kernel> [ <ramdisk> [ <second> ] ] download and boot kernel\n"
             "  flash:raw boot <kernel> [ <ramdisk> [ <second> ] ] create bootimage and \n"
             "                                           flash it\n"
+            "  dump <filename> <command>                dump data of <command> to <filename>\n"
             "  devices                                  list all connected devices\n"
             "  continue                                 continue with autoboot\n"
             "  reboot                                   reboot device normally\n"
@@ -1223,6 +1224,12 @@ int main(int argc, char **argv)
             wants_reboot = 1;
         } else if(!strcmp(*argv, "oem")) {
             argc = do_oem_command(argc, argv);
+        } else if(!strcmp(*argv, "dump")) {
+            require(2);
+            char* filename = argv[1];
+            skip(2);
+            argc = do_oem_command(argc, argv);
+            fb_queue_dump(filename);
         } else {
             usage();
             return 1;

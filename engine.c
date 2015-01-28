@@ -57,6 +57,7 @@
 #define OP_NOTICE     4
 #define OP_DOWNLOAD_SPARSE 5
 #define OP_WAIT_FOR_DISCONNECT 6
+#define OP_DUMP       8
 
 typedef struct Action Action;
 
@@ -364,6 +365,15 @@ void fb_queue_wait_for_disconnect(void)
     queue_action(OP_WAIT_FOR_DISCONNECT, "");
 }
 
+void fb_queue_dump(char *filename)
+{
+    Action *a;
+
+    a = queue_action(OP_DUMP, "");
+    a->data = filename;
+    a->msg = mkmsg("Dumping to %s", filename);
+}
+
 int fb_execute_queue(usb_handle *usb)
 {
     Action *a;
@@ -399,6 +409,10 @@ int fb_execute_queue(usb_handle *usb)
             fprintf(stderr,"%s\n",(char*)a->data);
         } else if (a->op == OP_DOWNLOAD_SPARSE) {
             status = fb_download_data_sparse(usb, a->data);
+            status = a->func(a, status, status ? fb_get_error() : "");
+            if (status) break;
+        } else if (a->op == OP_DUMP) {
+            status = fb_pull_file(usb, a->data);
             status = a->func(a, status, status ? fb_get_error() : "");
             if (status) break;
         } else if (a->op == OP_WAIT_FOR_DISCONNECT) {
